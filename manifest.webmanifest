@@ -1,0 +1,15 @@
+{
+  "name": "PDF Cropper",
+  "short_name": "PDF Cropper",
+  "description": "Crop parts out of a PDF and lay them out on A4 at exactly 100% scale, vector quality preserved.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e9ecf1",
+  "theme_color": "#1f3a5f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

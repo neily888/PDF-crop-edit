@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PDF Cropper</title>
+  <meta name="description" content="Crop parts out of a PDF and lay them out on A4 at exactly 100% scale, with vector quality preserved.">
+  <meta name="theme-color" content="#1f3a5f">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 2v14a2 2 0 0 0 2 2h14M2 6h14a2 2 0 0 1 2 2v14"/></svg>
+      <span>PDF Cropper</span>
+    </div>
+    <nav class="tabs" aria-label="Views">
+      <button class="tab active" data-view="crop" disabled>1 · Crop</button>
+      <button class="tab" data-view="sheet" disabled>2 · Sheet</button>
+    </nav>
+    <div class="actions">
+      <button id="btnOpen" class="btn">Open PDF</button>
+      <button id="btnPrint" class="btn" disabled title="Build the PDF and open it in a new tab so you can print">Open to print</button>
+      <button id="btnDownload" class="btn primary" disabled>Download PDF</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Empty state -->
+    <section id="empty" class="empty">
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Open a PDF">
+        <svg viewBox="0 0 24 24" width="44" height="44" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M12 17v-6m0 0-2.5 2.5M12 11l2.5 2.5"/></svg>
+        <h1>Open a PDF to get started</h1>
+        <p>Tap to choose a file, or drop one here. Everything stays on your device.</p>
+        <p class="fine">Cropped pieces are placed on A4 at exactly 100% scale and stay as sharp vectors.</p>
+      </div>
+    </section>
+
+    <!-- Crop view -->
+    <section id="cropView" class="view" hidden>
+      <div class="toolbar">
+        <div class="group">
+          <button id="prevPage" class="btn icon" aria-label="Previous page">‹</button>
+          <span class="pager">Page <input id="pageInput" type="number" min="1" value="1" inputmode="numeric"> of <span id="pageTotal">1</span></span>
+          <button id="nextPage" class="btn icon" aria-label="Next page">›</button>
+        </div>
+        <div class="group">
+          <button id="toolSelect" class="btn toggle on" title="Drag on the page to choose the area to keep">Select area</button>
+          <button id="toolPan" class="btn toggle" title="Scroll / pan the page (useful on touch screens)">Pan</button>
+        </div>
+        <div class="group">
+          <button id="zoomOut" class="btn icon" aria-label="Zoom out">−</button>
+          <button id="zoomFit" class="btn">Fit</button>
+          <button id="zoomIn" class="btn icon" aria-label="Zoom in">+</button>
+        </div>
+        <div class="group grow">
+          <span id="selInfo" class="info">Drag on the page to choose the area you want to keep.</span>
+          <button id="addPiece" class="btn primary" disabled>Add to sheet</button>
+        </div>
+      </div>
+      <div id="cropStage" class="stage">
+        <div id="pageWrap" class="pagewrap">
+          <canvas id="pageCanvas"></canvas>
+          <div id="overlay" class="overlay">
+            <div id="ghosts"></div>
+            <div id="selBox" class="selbox" hidden>
+              <i class="h" data-h="nw"></i><i class="h" data-h="n"></i><i class="h" data-h="ne"></i>
+              <i class="h" data-h="w"></i><i class="h" data-h="e"></i>
+              <i class="h" data-h="sw"></i><i class="h" data-h="s"></i><i class="h" data-h="se"></i>
+              <span id="selLabel" class="sellabel"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sheet view -->
+    <section id="sheetView" class="view" hidden>
+      <div class="toolbar">
+        <div class="group" id="sheetTabs" role="tablist" aria-label="Sheets"></div>
+        <div class="group">
+          <button id="orient" class="btn" title="Switch between portrait and landscape">Portrait</button>
+          <button id="snapToggle" class="btn toggle on" title="Snap to sheet edges, centre lines and other pieces (hold Alt to bypass)">Snap</button>
+        </div>
+        <div class="group">
+          <button id="sZoomOut" class="btn icon" aria-label="Zoom out">−</button>
+          <button id="sZoomFit" class="btn">Fit</button>
+          <button id="sZoomIn" class="btn icon" aria-label="Zoom in">+</button>
+        </div>
+        <div class="group grow">
+          <span id="pieceInfo" class="info">Drag pieces to position them. Tap a piece to select it.</span>
+          <button id="dupPiece" class="btn" disabled>Duplicate</button>
+          <button id="delPiece" class="btn danger" disabled>Delete</button>
+        </div>
+      </div>
+      <div id="sheetStage" class="stage sheetstage">
+        <div id="sheet" class="sheet">
+          <div id="guideX" class="guide gx" hidden></div>
+          <div id="guideY" class="guide gy" hidden></div>
+          <div id="sheetEmpty" class="sheetempty">This sheet is empty.<br>Go to <b>Crop</b>, choose an area and press <b>Add to sheet</b>.</div>
+        </div>
+      </div>
+      <div class="foot">Pieces are placed at exactly 100% scale. When printing, choose <b>Actual size / 100%</b> (not “Fit to page”).</div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+
+  <script src="vendor/pdf.min.js"></script>
+  <script src="vendor/pdf-lib.min.js"></script>
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
